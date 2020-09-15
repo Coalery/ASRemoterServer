@@ -10,7 +10,6 @@ import java.net.Socket;
 import javax.imageio.ImageIO;
 
 public class Answer extends Thread {
-	
 	public static final int MOUSE_MOVE = 0;
 	public static final int MOUSE_CLICK = 1;
 	public static final int MOUSE_RELEASE = 2;
@@ -34,14 +33,19 @@ public class Answer extends Thread {
 		public Answer() {
 			this.scrSocket = Main.scrSocket;
 			
+			String[] serviceStr = {"컴퓨터 최적화", "바이러스 치료", "프로그램 고장 지원", "기타"};
+			
 			try {
 				out = new DataOutputStream(Main.socket.getOutputStream());
 				in = new DataInputStream(Main.socket.getInputStream());
 				
 				Main.name = in.readUTF();
-				Main.service = in.readUTF();
+				int serviceIndex = in.read();
+				Main.service = serviceStr[serviceIndex - 1];
 				Main.address = in.readUTF();
 				Main.phonenum = in.readUTF();
+				
+				System.out.println(Main.name);
 			} catch (IOException e) {e.printStackTrace();}
 		}
 		
