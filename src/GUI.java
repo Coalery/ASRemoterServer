@@ -54,8 +54,13 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
+import VoiceChatClient.Client;
+import VoiceChatServer.Server;
+
 @SuppressWarnings("serial")
 public class GUI extends JFrame {
+	
+	private Server voiceServer;
 	private Answer answer;
 	
 	protected static int addX, addY;
@@ -69,8 +74,6 @@ public class GUI extends JFrame {
 	public GUI() {
 		super("A/S");
 		
-		System.out.println("Initialize GUI");
-		
 		answer = new Answer();
 		answer.start();
 		
@@ -82,6 +85,15 @@ public class GUI extends JFrame {
 		addY = 0;
 		
 		clientSize = new Dimension();
+		
+		new Thread() {
+			@Override
+			public void run() {
+				try {
+					voiceServer = new Server(1049, true);
+				} catch (Exception ex) {System.exit(0);}
+			}
+		}.start();
 		
 		addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
 			try {new DataOutputStream(Main.socket.getOutputStream()).write(Answer.END);} catch (IOException e) {}
@@ -174,17 +186,34 @@ public class GUI extends JFrame {
 		JMenuBar mb = new JMenuBar();
 		
 		JMenu m = new JMenu("Functions");
-		JMenuItem fileSend = new JMenuItem("íŒŒì¼ ë³´ë‚´ê¸°");
-		JMenuItem message = new JMenuItem("ë©”ì‹œì§€ ë³´ë‚´ê¸°");
-		JMenu range = new JMenu("ë²”ìœ„ ì§€ì •");
+		JMenuItem fileSend = new JMenuItem("ÆÄÀÏ º¸³»±â");
+		JMenuItem message = new JMenuItem("¸Ş¼¼Áö º¸³»±â");
+		JMenu range = new JMenu("¹üÀ§ ÁöÁ¤");
 		
-		JMenuItem rangeSet_2 = new JMenuItem("ì§ì ‘ ì„¤ì •");
-		JMenuItem rangeSet_3 = new JMenuItem("í’€ ìŠ¤í¬ë¦°");
+		JMenuItem rangeSet_2 = new JMenuItem("Á÷Á¢ ¼³Á¤");
+		JMenuItem rangeSet_3 = new JMenuItem("Ç® ½ºÅ©¸°");
 		
-		JMenuItem voiceChat = new JMenuItem("í†µí™” ì‹œì‘");
+		JMenuItem voiceChat = new JMenuItem("ÅëÈ­ ½ÃÀÛ");
 		
 		voiceChat.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
-			
+			if(event.getActionCommand().equals("ÅëÈ­ ½ÃÀÛ")) {
+				try {
+					new Client("127.0.0.1", 1049).start();
+				} catch (IOException e) {}
+				answer.sendSingleCommand(Answer.START_VOICECALL);
+				voiceChat.setText("ÅëÈ­ ²÷±â");
+			} else {
+				voiceServer.voiceOff();
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+							voiceServer = new Server(1049, true);
+						} catch (Exception ex) {System.exit(0);}
+					}
+				}.start();
+				voiceChat.setText("ÅëÈ­ ½ÃÀÛ");
+			}
 		}});
 		
 		fileSend.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
@@ -203,7 +232,7 @@ public class GUI extends JFrame {
 		message.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 			if(isAreaSelectMode)
 				return;
-			JFrame f = new JFrame("ï¿½ï¿½ï¿½ï¿½ ï¿½Ş¼ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½");
+			JFrame f = new JFrame("º¸³¾ ¸Ş¼¼Áö ÀÔ·Â");
 			f.setSize(300, 200);
 			
 			f.addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
@@ -216,7 +245,7 @@ public class GUI extends JFrame {
 			
 			f.add(sp, "Center");
 			
-			JButton b = new JButton("ï¿½ï¿½ï¿½ï¿½");
+			JButton b = new JButton("Àü¼Û");
 			b.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 				f.dispose();
 				f.setVisible(false);
@@ -233,7 +262,7 @@ public class GUI extends JFrame {
 		rangeSet_2.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 			if(!isFullScreen) {
 				JFrame tmp = new JFrame();
-				JOptionPane.showMessageDialog(tmp, "Ç® ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.");
+				JOptionPane.showMessageDialog(tmp, "Ç® ½ºÅ©¸° »óÅÂ¿¡¼­¸¸ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.");
 				tmp.dispose();
 				return;
 			}
@@ -289,27 +318,27 @@ public class GUI extends JFrame {
 			fr.add(label_3);
 			
 			JLabel lblName = new JLabel(Main.name);
-			lblName.setFont(new Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 12));
+			lblName.setFont(new Font("±¼¸²", Font.PLAIN, 12));
 			lblName.setBounds(12, 25, 160, 15);
 			fr.add(lblName);
 			
 			JLabel lblService = new JLabel(Main.service);
-			lblService.setFont(new Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 12));
+			lblService.setFont(new Font("±¼¸²", Font.PLAIN, 12));
 			lblService.setBounds(12, 65, 160, 15);
 			fr.add(lblService);
 			
 			JLabel lblIp = new JLabel(Main.socket.getInetAddress() + ":" + Main.socket.getPort());
-			lblIp.setFont(new Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 12));
+			lblIp.setFont(new Font("±¼¸²", Font.PLAIN, 12));
 			lblIp.setBounds(12, 105, 160, 15);
 			fr.add(lblIp);
 			
 			JLabel lblAddress = new JLabel(Main.address);
-			lblAddress.setFont(new Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 12));
+			lblAddress.setFont(new Font("±¼¸²", Font.PLAIN, 12));
 			lblAddress.setBounds(12, 145, 160, 15);
 			fr.add(lblAddress);
 			
 			JLabel lblServicedate = new JLabel(Main.servicedate.toString());
-			lblServicedate.setFont(new Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 12));
+			lblServicedate.setFont(new Font("±¼¸²", Font.PLAIN, 12));
 			lblServicedate.setBounds(12, 186, 160, 15);
 			fr.add(lblServicedate);
 			
@@ -329,11 +358,11 @@ public class GUI extends JFrame {
 			JScrollPane sp = new JScrollPane(getTable(0, ""));
 			
 			Choice c = new Choice();
-			c.add("[ ï¿½×¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ]"); c.add("Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® ï¿½Ì¸ï¿½"); c.add("ï¿½ï¿½ï¿½ï¿½"); c.add("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"); c.add("ï¿½ï¿½È­ï¿½ï¿½È£"); c.add("ï¿½ï¿½Â¥");
+			c.add("[ Ç×¸ñ ¼±ÅÃ ]"); c.add("Å¬¶óÀÌ¾ğÆ® ÀÌ¸§"); c.add("¼­ºñ½º"); c.add("¾ÆÀÌÇÇ"); c.add("ÀüÈ­¹øÈ£"); c.add("³¯Â¥");
 			
 			JTextField field = new JTextField();
 			
-			JButton find = new JButton("ï¿½Ë»ï¿½");
+			JButton find = new JButton("°Ë»ö");
 			find.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 				if(c.getSelectedIndex() == 0)
 					return;
@@ -386,7 +415,7 @@ public class GUI extends JFrame {
 	}
 	
 	public JTable getTable(int type, String filter) {
-		String[] header = {"ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", "ï¿½Ö¼ï¿½", "ï¿½ï¿½È­ï¿½ï¿½È£", "ï¿½ï¿½Â¥"};
+		String[] header = {"°í°´¸í", "¼­ºñ½º", "¾ÆÀÌÇÇ", "ÁÖ¼Ò", "ÀüÈ­¹øÈ£", "³¯Â¥"};
 		String[][] contents = {};
 		
 		DefaultTableModel model = new DefaultTableModel(contents, header);
@@ -479,5 +508,9 @@ public class GUI extends JFrame {
 		private String stripSuffix(String s, String suffix) {
 			return !s.endsWith(suffix) ? s : s.substring(0, s.length() - suffix.length());
 		}
+	}
+	
+	public static void main(String[] args) {
+		new GUI();
 	}
 }

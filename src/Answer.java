@@ -33,6 +33,7 @@ public class Answer extends Thread {
 		
 		public Answer() {
 			this.scrSocket = Main.scrSocket;
+			
 			try {
 				out = new DataOutputStream(Main.socket.getOutputStream());
 				in = new DataInputStream(Main.socket.getInputStream());
@@ -41,8 +42,6 @@ public class Answer extends Thread {
 				Main.service = in.readUTF();
 				Main.address = in.readUTF();
 				Main.phonenum = in.readUTF();
-				
-				System.out.println(Main.name);
 			} catch (IOException e) {e.printStackTrace();}
 		}
 		

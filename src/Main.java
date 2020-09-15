@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Main {
-	public static final String jdbcURL = "jdbc:mariadb://127.0.0.1:3306/ASDB";
+	public static final String jdbcURL = "jdbc:mariadb://127.0.0.1:3306/AS";
 	public static final String userID = "root";
 	public static final String pwd = "12345678";
 	
