@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Choice;
 import java.awt.Dimension;
 import java.awt.FileDialog;
@@ -28,7 +29,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -41,6 +41,7 @@ import java.util.Vector;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -61,10 +62,12 @@ import VoiceChatServer.Server;
 public class GUI extends JFrame {
 	
 	private Server voiceServer;
+	private Client voiceClient;
 	private Answer answer;
 	
 	protected static int addX, addY;
 	
+	protected boolean isCalling;
 	protected boolean isFullScreen;
 	protected boolean isAreaSelectMode;
 	
@@ -74,29 +77,25 @@ public class GUI extends JFrame {
 	public GUI() {
 		super("A/S");
 		
+		CardLayout cardLayout = new CardLayout();
+		
 		answer = new Answer();
 		answer.start();
 		
-		setLayout(new BorderLayout());
+		setLayout(cardLayout);
 		isFullScreen = true;
 		isAreaSelectMode = false;
+		isCalling = false;
 		
 		addX = 0;
 		addY = 0;
 		
 		clientSize = new Dimension();
 		
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					voiceServer = new Server(1049, true);
-				} catch (Exception ex) {System.exit(0);}
-			}
-		}.start();
+		runCallServer();
 		
 		addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
-			try {new DataOutputStream(Main.socket.getOutputStream()).write(Answer.END);} catch (IOException e) {}
+			answer.sendSingleCommand(Answer.END);
 			System.exit(0);
 		}});
 		
@@ -186,33 +185,28 @@ public class GUI extends JFrame {
 		JMenuBar mb = new JMenuBar();
 		
 		JMenu m = new JMenu("Functions");
-		JMenuItem fileSend = new JMenuItem("∆ƒ¿œ ∫∏≥ª±‚");
-		JMenuItem message = new JMenuItem("∏ﬁºº¡ˆ ∫∏≥ª±‚");
-		JMenu range = new JMenu("π¸¿ß ¡ˆ¡§");
+		JMenuItem fileSend = new JMenuItem("ÌååÏùº Î≥¥ÎÇ¥Í∏∞");
+		JMenuItem message = new JMenuItem("Î©îÏÑ∏ÏßÄ Î≥¥ÎÇ¥Í∏∞");
+		JMenu range = new JMenu("Î≤îÏúÑ ÏßÄÏ†ï");
 		
-		JMenuItem rangeSet_2 = new JMenuItem("¡˜¡¢ º≥¡§");
-		JMenuItem rangeSet_3 = new JMenuItem("«Æ Ω∫≈©∏∞");
+		JMenuItem rangeSet_2 = new JMenuItem("ÏßÅÏ†ë ÏÑ§Ï†ï");
+		JMenuItem rangeSet_3 = new JMenuItem("ÌíÄ Ïä§ÌÅ¨Î¶∞");
 		
-		JMenuItem voiceChat = new JMenuItem("≈Î»≠ Ω√¿€");
+		JMenuItem voiceChat = new JMenuItem("ÌÜµÌôî ÏãúÏûë");
 		
 		voiceChat.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
-			if(event.getActionCommand().equals("≈Î»≠ Ω√¿€")) {
+			if(!isCalling) {
 				try {
-					new Client("127.0.0.1", 1049).start();
+					voiceClient = new Client("127.0.0.1", 1049);
+					voiceClient.start();
 				} catch (IOException e) {}
 				answer.sendSingleCommand(Answer.START_VOICECALL);
-				voiceChat.setText("≈Î»≠ ≤˜±‚");
+				isCalling = true;
+				voiceChat.setText("ÌÜµÌôî ÎÅäÍ∏∞");
 			} else {
+				answer.sendSingleCommand(Answer.STOP_VOICECALL);
 				voiceServer.voiceOff();
-				new Thread() {
-					@Override
-					public void run() {
-						try {
-							voiceServer = new Server(1049, true);
-						} catch (Exception ex) {System.exit(0);}
-					}
-				}.start();
-				voiceChat.setText("≈Î»≠ Ω√¿€");
+				voiceChat.setText("ÌÜµÌôî ÏãúÏûë");
 			}
 		}});
 		
@@ -232,7 +226,7 @@ public class GUI extends JFrame {
 		message.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 			if(isAreaSelectMode)
 				return;
-			JFrame f = new JFrame("∫∏≥æ ∏ﬁºº¡ˆ ¿‘∑¬");
+			JFrame f = new JFrame("Î≥¥ÎÇº Î©îÏÑ∏ÏßÄ ÏûÖÎ†•");
 			f.setSize(300, 200);
 			
 			f.addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
@@ -245,7 +239,7 @@ public class GUI extends JFrame {
 			
 			f.add(sp, "Center");
 			
-			JButton b = new JButton("¿¸º€");
+			JButton b = new JButton("Ï†ÑÏÜ°");
 			b.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 				f.dispose();
 				f.setVisible(false);
@@ -262,7 +256,7 @@ public class GUI extends JFrame {
 		rangeSet_2.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 			if(!isFullScreen) {
 				JFrame tmp = new JFrame();
-				JOptionPane.showMessageDialog(tmp, "«Æ Ω∫≈©∏∞ ªÛ≈¬ø°º≠∏∏ ªÁøÎ«“ ºˆ ¿÷Ω¿¥œ¥Ÿ.");
+				JOptionPane.showMessageDialog(tmp, "ÌíÄ Ïä§ÌÅ¨Î¶∞ ÏÉÅÌÉúÏóêÏÑúÎßå ÏÇ¨Ïö©Ìï† Ïàò ÏûàÏäµÎãàÎã§.");
 				tmp.dispose();
 				return;
 			}
@@ -289,61 +283,61 @@ public class GUI extends JFrame {
 		JMenuItem database = new JMenuItem("Find Client Informations");
 		
 		clientB.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
-			JFrame fr = new JFrame("Client Info");
-			fr.addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
-				fr.setVisible(false);
-				fr.dispose();
+			JDialog cliInfoDialog = new JDialog(GUI.this, "Client Info", true);
+			cliInfoDialog.addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent event) {
+				cliInfoDialog.setVisible(false);
+				cliInfoDialog.dispose();
 			}});
-			fr.setBounds(100, 100, 200, 250);
-			fr.setLayout(null);
+			cliInfoDialog.setBounds(100, 100, 200, 250);
+			cliInfoDialog.setLayout(null);
 			
 			JLabel lblF = new JLabel("\uC774\uB984");
 			lblF.setBounds(12, 10, 57, 15);
-			fr.add(lblF);
+			cliInfoDialog.add(lblF);
 			
 			JLabel label = new JLabel("\uC11C\uBE44\uC2A4");
 			label.setBounds(12, 50, 57, 15);
-			fr.add(label);
+			cliInfoDialog.add(label);
 			
 			JLabel label_1 = new JLabel("\uC544\uC774\uD53C");
 			label_1.setBounds(12, 90, 57, 15);
-			fr.add(label_1);
+			cliInfoDialog.add(label_1);
 			
 			JLabel label_2 = new JLabel("\uC8FC\uC18C");
 			label_2.setBounds(12, 130, 57, 15);
-			fr.add(label_2);
+			cliInfoDialog.add(label_2);
 			
 			JLabel label_3 = new JLabel("\uC11C\uBE44\uC2A4 \uC77C\uC790");
 			label_3.setBounds(12, 170, 82, 15);
-			fr.add(label_3);
+			cliInfoDialog.add(label_3);
 			
 			JLabel lblName = new JLabel(Main.name);
-			lblName.setFont(new Font("±º∏≤", Font.PLAIN, 12));
+			lblName.setFont(new Font("Íµ¥Î¶º", Font.PLAIN, 12));
 			lblName.setBounds(12, 25, 160, 15);
-			fr.add(lblName);
+			cliInfoDialog.add(lblName);
 			
 			JLabel lblService = new JLabel(Main.service);
-			lblService.setFont(new Font("±º∏≤", Font.PLAIN, 12));
+			lblService.setFont(new Font("Íµ¥Î¶º", Font.PLAIN, 12));
 			lblService.setBounds(12, 65, 160, 15);
-			fr.add(lblService);
+			cliInfoDialog.add(lblService);
 			
 			JLabel lblIp = new JLabel(Main.socket.getInetAddress() + ":" + Main.socket.getPort());
-			lblIp.setFont(new Font("±º∏≤", Font.PLAIN, 12));
+			lblIp.setFont(new Font("Íµ¥Î¶º", Font.PLAIN, 12));
 			lblIp.setBounds(12, 105, 160, 15);
-			fr.add(lblIp);
+			cliInfoDialog.add(lblIp);
 			
 			JLabel lblAddress = new JLabel(Main.address);
-			lblAddress.setFont(new Font("±º∏≤", Font.PLAIN, 12));
+			lblAddress.setFont(new Font("Íµ¥Î¶º", Font.PLAIN, 12));
 			lblAddress.setBounds(12, 145, 160, 15);
-			fr.add(lblAddress);
+			cliInfoDialog.add(lblAddress);
 			
 			JLabel lblServicedate = new JLabel(Main.servicedate.toString());
-			lblServicedate.setFont(new Font("±º∏≤", Font.PLAIN, 12));
+			lblServicedate.setFont(new Font("Íµ¥Î¶º", Font.PLAIN, 12));
 			lblServicedate.setBounds(12, 186, 160, 15);
-			fr.add(lblServicedate);
+			cliInfoDialog.add(lblServicedate);
 			
-			fr.setResizable(false);
-			fr.setVisible(true);
+			cliInfoDialog.setResizable(false);
+			cliInfoDialog.setVisible(true);
 		}});
 		
 		database.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
@@ -358,11 +352,16 @@ public class GUI extends JFrame {
 			JScrollPane sp = new JScrollPane(getTable(0, ""));
 			
 			Choice c = new Choice();
-			c.add("[ «◊∏Ò º±≈√ ]"); c.add("≈¨∂Û¿Ãæ∆Æ ¿Ã∏ß"); c.add("º≠∫ÒΩ∫"); c.add("æ∆¿Ã««"); c.add("¿¸»≠π¯»£"); c.add("≥Ø¬•");
+			c.add("[ Ìï≠Î™© ÏÑ†ÌÉù ]");
+			c.add("Í≥†Í∞ùÎ™Ö");
+			c.add("ÏÑúÎπÑÏä§");
+			c.add("ÏïÑÏù¥Ìîº");
+			c.add("Ï†ÑÌôîÎ≤àÌò∏");
+			c.add("ÎÇ†Ïßú");
 			
 			JTextField field = new JTextField();
 			
-			JButton find = new JButton("∞Àªˆ");
+			JButton find = new JButton("Í≤ÄÏÉâ");
 			find.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 				if(c.getSelectedIndex() == 0)
 					return;
@@ -408,14 +407,23 @@ public class GUI extends JFrame {
 		drawLocation = new DropTargetJLabel();
 		drawLocation.setHorizontalAlignment(JLabel.CENTER);
 		
-		add(drawLocation, "Center");
+		JPanel drawPanel = new JPanel();
+		drawPanel.setLayout(new BorderLayout());
+		drawPanel.add(drawLocation, "Center");
+		
+		JPanel howPanel = new JPanel();
+		
+		getContentPane().add(drawPanel);
+		getContentPane().add(howPanel);
+		
+		cardLayout.first(getContentPane());
 		
 		setResizable(false);
 		setVisible(true);
 	}
 	
 	public JTable getTable(int type, String filter) {
-		String[] header = {"∞Ì∞¥∏Ì", "º≠∫ÒΩ∫", "æ∆¿Ã««", "¡÷º“", "¿¸»≠π¯»£", "≥Ø¬•"};
+		String[] header = {"Í≥†Í∞ùÎ™Ö", "ÏÑúÎπÑÏä§", "ÏïÑÏù¥Ìîº", "Ï£ºÏÜå", "Ï†ÑÌôîÎ≤àÌò∏", "ÎÇ†Ïßú"};
 		String[][] contents = {};
 		
 		DefaultTableModel model = new DefaultTableModel(contents, header);
@@ -470,6 +478,17 @@ public class GUI extends JFrame {
 		clientSize = new Dimension(image.getWidth(), image.getHeight());
 	}
 	
+	public void runCallServer() {
+		new Thread() {
+			@Override
+			public void run() {
+				try {
+					voiceServer = new Server(1049, true);
+				} catch (Exception ex) {System.exit(0);}
+			}
+		}.start();
+	}
+	
 	public class DropTargetJLabel extends JLabel implements DropTargetListener {
 		
 		public DropTargetJLabel() {
@@ -508,9 +527,5 @@ public class GUI extends JFrame {
 		private String stripSuffix(String s, String suffix) {
 			return !s.endsWith(suffix) ? s : s.substring(0, s.length() - suffix.length());
 		}
-	}
-	
-	public static void main(String[] args) {
-		new GUI();
 	}
 }
