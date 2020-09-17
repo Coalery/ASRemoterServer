@@ -279,8 +279,8 @@ public class GUI extends JFrame {
 		range.add(rangeSet_3);
 		
 		JMenu client = new JMenu("Client Info...");
-		JMenuItem clientB = new JMenuItem("Show Client Information");
-		JMenuItem database = new JMenuItem("Find Client Informations");
+		JMenuItem clientB = new JMenuItem("현재 고객 정보");
+		JMenuItem database = new JMenuItem("고객 정보 찾기");
 		
 		clientB.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent event) {
 			JDialog cliInfoDialog = new JDialog(GUI.this, "Client Info", true);
@@ -411,10 +411,38 @@ public class GUI extends JFrame {
 		drawPanel.setLayout(new BorderLayout());
 		drawPanel.add(drawLocation, "Center");
 		
-		JPanel howPanel = new JPanel();
+		JPanel manualPanel1 = new JPanel();
+		JPanel manualPanel2 = new JPanel();
 		
+		manualPanel1.setLayout(new BorderLayout());
+		manualPanel2.setLayout(new BorderLayout());
+		
+		JLabel manual1 = new JLabel(new ImageIcon("assets/manual1.png"));
+		JLabel manual2 = new JLabel(new ImageIcon("assets/manual2.png"));
+		
+		manualPanel1.add(manual1, BorderLayout.CENTER);
+		manualPanel2.add(manual2, BorderLayout.CENTER);
+		
+		manualPanel1.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(e.getButton() == MouseEvent.BUTTON1)
+					cardLayout.next(getContentPane());
+			}
+		});
+		manualPanel2.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(e.getButton() == MouseEvent.BUTTON1)
+					cardLayout.next(getContentPane());
+				else
+					cardLayout.previous(getContentPane());
+			}
+		});
+		
+		getContentPane().add(manualPanel1);
+		getContentPane().add(manualPanel2);
 		getContentPane().add(drawPanel);
-		getContentPane().add(howPanel);
 		
 		cardLayout.first(getContentPane());
 		
