@@ -52,6 +52,7 @@ public class Answer extends Thread {
 	
 	@Override
 	public void run() {
+		try {Thread.sleep(3000);} catch (InterruptedException e) {}
 		while(true) {
 			BufferedImage bimage = null;
 			try {

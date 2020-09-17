@@ -1,3 +1,6 @@
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -8,6 +11,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Date;
+
+import javax.imageio.ImageIO;
 
 public class Main {
 	public static final String jdbcURL = "jdbc:mariadb://127.0.0.1:3306/ASDB";
@@ -29,6 +34,21 @@ public class Main {
 		ServerSocket ss = null;
 		ServerSocket ss2 = null;
 		
+		// Load Manual Image
+		BufferedImage manualImage1 = null;
+		BufferedImage manualImage2 = null;
+		
+		try {
+			manualImage1 = ImageIO.read(new File("assets/manual1.png"));
+			manualImage2 = ImageIO.read(new File("assets/manual2.png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Image resizedManualImage1 = manualImage1.getScaledInstance(1356, 714, Image.SCALE_SMOOTH);
+		Image resizedManualImage2 = manualImage2.getScaledInstance(1356, 714, Image.SCALE_SMOOTH);
+		
+		// Start ServerSocket
 		try {
 			ss = new ServerSocket(port);
 			ss2 = new ServerSocket(port+1);
@@ -40,7 +60,7 @@ public class Main {
 		} catch (IOException e) {e.printStackTrace();}
 		
 		servicedate = new Date();
-		gui = new GUI();
+		gui = new GUI(resizedManualImage1, resizedManualImage2);
 		addDataAtDataBase(name, service, socket.getInetAddress(), phonenum, address);
 	}
 	
